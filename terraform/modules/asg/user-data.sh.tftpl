@@ -1,0 +1,204 @@
+#!/bin/bash
+set -euo pipefail
+
+# Log all output to user-data.log
+exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+echo "=== Starting Savitara App Provisioning ==="
+date
+
+# 1. Update OS packages
+dnf update -y
+
+# 2. Install Node.js 20 & Git
+dnf install -y nodejs git
+
+echo "Node version: $(node -v)"
+echo "NPM version: $(npm -v)"
+
+# 3. Create application directory
+APP_DIR="/opt/savitara-app"
+mkdir -p "$APP_DIR"
+cd "$APP_DIR"
+
+# 4. Write package.json
+cat <<'EOF' > "$APP_DIR/package.json"
+{
+  "name": "savitara-devops-app",
+  "version": "1.0.0",
+  "description": "Production Node.js web application for Savitara Infotel DevOps assessment",
+  "main": "server.js",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.750.0",
+    "@aws-sdk/client-secrets-manager": "^3.750.0",
+    "express": "^4.21.2",
+    "mysql2": "^3.12.0"
+  }
+}
+EOF
+
+# 5. Write server.js application code
+cat <<'EOF' > "$APP_DIR/server.js"
+const express = require('express');
+const os = require('os');
+const mysql = require('mysql2/promise');
+const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+const AWS_REGION = process.env.AWS_REGION || '${aws_region}';
+const DB_SECRET_ARN = process.env.DB_SECRET_ARN || '${db_secret_arn}';
+const APP_S3_BUCKET = process.env.APP_S3_BUCKET || '${app_s3_bucket}';
+
+let cachedDbConfig = null;
+let dbPool = null;
+
+const smClient = new SecretsManagerClient({ region: AWS_REGION });
+const s3Client = new S3Client({ region: AWS_REGION });
+
+app.use(express.json());
+
+async function getDbCredentials() {
+  if (cachedDbConfig) return cachedDbConfig;
+  if (DB_SECRET_ARN) {
+    try {
+      const command = new GetSecretValueCommand({ SecretId: DB_SECRET_ARN });
+      const response = await smClient.send(command);
+      if (response.SecretString) {
+        const secret = JSON.parse(response.SecretString);
+        cachedDbConfig = {
+          host: secret.host || process.env.DB_HOST,
+          user: secret.username || process.env.DB_USER,
+          password: secret.password || process.env.DB_PASSWORD,
+          database: secret.dbname || process.env.DB_NAME || 'savitara_db',
+          port: secret.port ? parseInt(secret.port, 10) : 3306,
+          connectTimeout: 5000,
+        };
+        return cachedDbConfig;
+      }
+    } catch (err) {
+      console.warn('SecretsManager lookup error:', err.message);
+    }
+  }
+  return {
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'admin',
+    password: process.env.DB_PASSWORD || 'secret',
+    database: process.env.DB_NAME || 'savitara_db',
+    port: 3306,
+  };
+}
+
+async function getDbPool() {
+  if (!dbPool) {
+    const config = await getDbCredentials();
+    dbPool = mysql.createPool(config);
+  }
+  return dbPool;
+}
+
+async function checkDbHealth() {
+  try {
+    const pool = await getDbPool();
+    const [rows] = await pool.query('SELECT 1 + 1 AS solution, NOW() as current_time, VERSION() as db_version');
+    return { status: 'UP', details: rows[0] };
+  } catch (error) {
+    return { status: 'DOWN', error: error.message };
+  }
+}
+
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'UP',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    hostname: os.hostname(),
+    service: 'savitara-devops-app'
+  });
+});
+
+app.get('/api/info', (req, res) => {
+  res.json({
+    appName: 'savitara-devops-app',
+    hostname: os.hostname(),
+    platform: process.platform,
+    region: AWS_REGION,
+    uptime: process.uptime(),
+  });
+});
+
+app.get('/api/db-status', async (req, res) => {
+  const result = await checkDbHealth();
+  res.json(result);
+});
+
+app.get('/', async (req, res) => {
+  const dbHealth = await checkDbHealth();
+  const html = '<!DOCTYPE html>' +
+    '<html>' +
+    '<head>' +
+      '<title>Savitara Infotel - AWS Production Infrastructure</title>' +
+      '<style>' +
+        'body { font-family: -apple-system, sans-serif; background: #f8fafc; padding: 2rem; color: #1e293b; }' +
+        '.box { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); max-width: 700px; margin: 0 auto; }' +
+        'h1 { color: #1d4ed8; }' +
+        '.badge { background: #16a34a; color: white; padding: 4px 10px; border-radius: 12px; font-weight: bold; }' +
+      '</style>' +
+    '</head>' +
+    '<body>' +
+      '<div class="box">' +
+        '<h1>Savitara Infotel DevOps Assessment</h1>' +
+        '<p><span class="badge">Healthy &amp; Running</span></p>' +
+        '<p><strong>Instance Hostname:</strong> ' + os.hostname() + '</p>' +
+        '<p><strong>AWS Region:</strong> ' + AWS_REGION + '</p>' +
+        '<p><strong>Database Status:</strong> ' + dbHealth.status + '</p>' +
+        '<p><strong>S3 Storage:</strong> ' + APP_S3_BUCKET + '</p>' +
+        '<p><a href="/health">View Health Check API (/health)</a></p>' +
+      '</div>' +
+    '</body>' +
+    '</html>';
+  res.send(html);
+});
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log('App running on port ' + PORT);
+});
+EOF
+
+# 6. Install NPM packages
+npm install --omit=dev
+
+# 7. Setup systemd unit
+cat <<EOF > /etc/systemd/system/savitara-app.service
+[Unit]
+Description=Savitara DevOps Node.js Web Application
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=$APP_DIR
+ExecStart=/usr/bin/node $APP_DIR/server.js
+Restart=always
+RestartSec=5
+Environment=PORT=3000
+Environment=AWS_REGION=${aws_region}
+Environment=DB_SECRET_ARN=${db_secret_arn}
+Environment=APP_S3_BUCKET=${app_s3_bucket}
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# 8. Reload systemd, enable and start application
+systemctl daemon-reload
+systemctl enable savitara-app.service
+systemctl start savitara-app.service
+
+# 9. Health verification
+echo "Waiting for app to start on port 3000..."
+sleep 5
+curl -fsS http://localhost:3000/health || echo "App health check failed to respond immediately"
+
+echo "=== Provisioning completed successfully ==="
+date

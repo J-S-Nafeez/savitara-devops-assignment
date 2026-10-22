@@ -1,0 +1,19 @@
+[Unit]
+Description=Savitara DevOps Node.js Web Application
+After=network.target
+
+[Service]
+Type=simple
+User=ec2-user
+WorkingDirectory=/opt/savitara-app
+ExecStart=/usr/bin/node /opt/savitara-app/server.js
+Restart=always
+RestartSec=5
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=savitara-app
+Environment=NODE_ENV=production
+Environment=PORT=3000
+
+[Install]
+WantedBy=multi-user.target

@@ -84,3 +84,4 @@ flowchart TD
    - The database master password is generated with 24 characters of high entropy and stored directly in AWS Secrets Manager.
    - The EC2 instances assume an IAM role granting least-privilege `secretsmanager:GetSecretValue` access to load credentials into memory dynamically at runtime.
    - No passwords or secrets are ever hardcoded in code, Terraform files, or version control.
+

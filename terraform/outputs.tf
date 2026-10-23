@@ -42,3 +42,4 @@ output "autoscaling_group_name" {
   description = "Name of the EC2 Auto Scaling Group"
   value       = module.asg.autoscaling_group_name
 }
+

@@ -23,3 +23,4 @@ output "db_name" {
   description = "Database name"
   value       = var.db_name
 }
+

@@ -52,3 +52,4 @@ test('GET / returns HTML dashboard with 200', async () => {
     server.close();
   }
 });
+

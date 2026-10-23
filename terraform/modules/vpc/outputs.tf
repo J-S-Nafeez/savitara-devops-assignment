@@ -32,3 +32,4 @@ output "nat_gateway_ip" {
   description = "Elastic IP address of the NAT Gateway"
   value       = aws_eip.nat.public_ip
 }
+

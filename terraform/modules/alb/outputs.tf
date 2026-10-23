@@ -32,3 +32,4 @@ output "app_url" {
   description = "URL to access the application"
   value       = var.enable_https ? "https://${aws_lb.main.dns_name}" : "http://${aws_lb.main.dns_name}"
 }
+

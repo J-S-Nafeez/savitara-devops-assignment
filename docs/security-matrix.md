@@ -55,3 +55,4 @@ This document outlines the defense-in-depth security architecture implemented fo
    - **Amazon S3 ALB Logs Bucket**: Server-Side Encryption enabled, S3 Public Access Blocked.
    - **AWS Secrets Manager**: Stored with envelope encryption and automatic zero-window destruction on teardown.
    - **EC2 Instance Metadata Service**: Enforced IMDSv2 (`http_tokens = "required"`, hop limit 1) preventing SSRF credential theft.
+

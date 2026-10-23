@@ -1,7 +1,7 @@
 # Savitara Infotel – DevOps Practical Assessment
 ### Production-Grade AWS Infrastructure as Code (Terraform) & CI/CD Pipeline
 
-[![Terraform CI/CD Pipeline](https://github.com/candidate-username/savitara-devops-assignment/actions/workflows/terraform-ci-cd.yml/badge.svg)](https://github.com/candidate-username/savitara-devops-assignment/actions)
+[![Terraform CI/CD Pipeline](https://github.com/J-S-Nafeez/savitara-devops-assignment/actions/workflows/terraform-ci-cd.yml/badge.svg)](https://github.com/J-S-Nafeez/savitara-devops-assignment/actions)
 [![Terraform Version](https://img.shields.io/badge/Terraform-%3E%3D1.5.0-623CE4?logo=terraform)](https://www.terraform.io/)
 [![AWS Cloud](https://img.shields.io/badge/AWS-Production--Ready-FF9900?logo=amazon-aws)](https://aws.amazon.com/)
 [![Node.js](https://img.shields.io/badge/Node.js-20.x-339933?logo=node.js)](https://nodejs.org/)
@@ -121,7 +121,7 @@ flowchart TD
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/<your-username>/savitara-devops-assignment.git
+git clone https://github.com/J-S-Nafeez/savitara-devops-assignment.git
 cd savitara-devops-assignment/terraform
 
 # 2. Configure variables
@@ -201,14 +201,15 @@ terraform destroy -auto-approve
 
 ---
 
-## 👨‍💻 Candidate Details (Submission Form)
+## 👨‍💻 Candidate Details
 
-- **Total Experience:** 3.5 Years
-- **Relevant Experience (DevOps / AWS / IaC / CI/CD):** 3.5 Years
-- **Current Company:** [Current Employer / Candidate to fill]
-- **Current Designation:** DevOps Engineer
-- **Current Salary (CTC):** [Candidate to fill]
-- **Expected Salary (CTC):** [Candidate to fill]
-- **Notice Period:** Immediate / 15-30 Days
-- **Current Location:** [Candidate to fill]
+- **Candidate Name:** J S Nafeez
+- **Total Experience:** ~1 Year (11 Months)
+- **Relevant Experience (DevOps / Cloud / Software Engineering):** ~1 Year (11 Months)
+- **Previous Company:** MAQ Software
+- **Designation:** Associate Software Engineer
+- **Notice Period:** Immediate Joiner
+- **Current Location:** Hyderabad
 - **Ready to Relocate to Ahmedabad?:** Yes
+- **GitHub Profile:** [github.com/J-S-Nafeez](https://github.com/J-S-Nafeez)
+

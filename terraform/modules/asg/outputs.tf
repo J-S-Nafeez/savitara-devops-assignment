@@ -22,3 +22,4 @@ output "launch_template_latest_version" {
   description = "The latest version of the Launch Template"
   value       = aws_launch_template.main.latest_version
 }
+

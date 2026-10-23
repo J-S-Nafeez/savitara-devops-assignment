@@ -169,7 +169,7 @@ curl -k https://<YOUR_ALB_DNS_NAME>/api/s3-test
    git add .
    git commit -m "feat: complete AWS infrastructure and CI/CD pipeline"
    git branch -M main
-   git remote add origin https://github.com/<your-username>/savitara-devops-assignment.git
+   git remote add origin https://github.com/J-S-Nafeez/savitara-devops-assignment.git
    git push -u origin main
    ```
 2. Navigate to your GitHub repository -> **Settings** -> **Secrets and variables** -> **Actions**.
@@ -189,3 +189,4 @@ To prevent ongoing cloud costs, destroy the provisioned infrastructure when eval
 terraform destroy -auto-approve
 ```
 *Or execute the `destroy` action via the GitHub Actions manual workflow dispatch.*
+

@@ -64,6 +64,8 @@ jobs:
       run:
         working-directory: ./terraform
     env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_REGION: ${{ secrets.AWS_REGION || 'ap-south-1' }}
       TF_VAR_aws_region: ${{ secrets.AWS_REGION || 'ap-south-1' }}
 
@@ -81,35 +83,35 @@ jobs:
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
-        if: ${{ secrets.AWS_ACCESS_KEY_ID != '' }}
+        if: env.AWS_ACCESS_KEY_ID != ''
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION || 'ap-south-1' }}
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Terraform Init
-        run: terraform init -backend=false
+        run: terraform init
 
       - name: Terraform Validate
         run: terraform validate
 
       - name: Terraform Plan
         id: plan
-        if: ${{ secrets.AWS_ACCESS_KEY_ID != '' && (github.event_name == 'pull_request' || inputs.action == 'plan') }}
+        if: env.AWS_ACCESS_KEY_ID != '' && (github.event_name == 'pull_request' || inputs.action == 'plan')
         run: |
           terraform plan -no-color -out=tfplan
         continue-on-error: false
 
       - name: Terraform Apply
         id: apply
-        if: ${{ secrets.AWS_ACCESS_KEY_ID != '' && ((github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name == 'push') || inputs.action == 'apply' }}
+        if: env.AWS_ACCESS_KEY_ID != '' && (((github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name == 'push') || inputs.action == 'apply')
         run: |
           terraform apply -auto-approve
           echo "APP_URL=$(terraform output -raw application_url)" >> $GITHUB_ENV
           echo "HEALTH_URL=$(terraform output -raw health_check_url)" >> $GITHUB_ENV
 
       - name: Post-Deployment End-to-End Health Check
-        if: ${{ env.HEALTH_URL != '' }}
+        if: env.HEALTH_URL != ''
         run: |
           echo "Validating application health at: $HEALTH_URL"
           for i in {1..12}; do
@@ -125,6 +127,6 @@ jobs:
           exit 1
 
       - name: Terraform Destroy (Manual Trigger Only)
-        if: ${{ inputs.action == 'destroy' && secrets.AWS_ACCESS_KEY_ID != '' }}
+        if: inputs.action == 'destroy' && env.AWS_ACCESS_KEY_ID != ''
         run: terraform destroy -auto-approve
 

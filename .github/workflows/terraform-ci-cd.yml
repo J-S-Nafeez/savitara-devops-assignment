@@ -89,6 +89,14 @@ jobs:
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
+      - name: Restore Terraform State
+        uses: actions/cache/restore@v4
+        with:
+          path: terraform/terraform.tfstate*
+          key: tf-state-${{ github.ref_name }}
+          restore-keys: |
+            tf-state-
+
       - name: Terraform Init
         run: terraform init
 
@@ -97,18 +105,25 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        if: env.AWS_ACCESS_KEY_ID != '' && (github.event_name == 'pull_request' || inputs.action == 'plan')
+        if: env.AWS_ACCESS_KEY_ID != '' && (github.event_name == 'pull_request' || inputs.action == 'plan' || github.event_name == 'push')
         run: |
           terraform plan -no-color -out=tfplan
         continue-on-error: false
 
       - name: Terraform Apply
         id: apply
-        if: env.AWS_ACCESS_KEY_ID != '' && (((github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name == 'push') || inputs.action == 'apply')
+        if: env.AWS_ACCESS_KEY_ID != '' && inputs.action == 'apply'
         run: |
           terraform apply -auto-approve
           echo "APP_URL=$(terraform output -raw application_url)" >> $GITHUB_ENV
           echo "HEALTH_URL=$(terraform output -raw health_check_url)" >> $GITHUB_ENV
+
+      - name: Save Terraform State
+        uses: actions/cache/save@v4
+        if: always() && env.AWS_ACCESS_KEY_ID != ''
+        with:
+          path: terraform/terraform.tfstate*
+          key: tf-state-${{ github.ref_name }}-${{ github.run_id }}
 
       - name: Post-Deployment End-to-End Health Check
         if: env.HEALTH_URL != ''

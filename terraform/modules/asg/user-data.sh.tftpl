@@ -48,6 +48,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const AWS_REGION = process.env.AWS_REGION || '${aws_region}';
 const DB_SECRET_ARN = process.env.DB_SECRET_ARN || '${db_secret_arn}';
+const DB_HOST = process.env.DB_HOST || '${db_host}';
 const APP_S3_BUCKET = process.env.APP_S3_BUCKET || '${app_s3_bucket}';
 
 let cachedDbConfig = null;
@@ -67,7 +68,7 @@ async function getDbCredentials() {
       if (response.SecretString) {
         const secret = JSON.parse(response.SecretString);
         cachedDbConfig = {
-          host: secret.host || process.env.DB_HOST,
+          host: secret.host || DB_HOST || process.env.DB_HOST,
           user: secret.username || process.env.DB_USER,
           password: secret.password || process.env.DB_PASSWORD,
           database: secret.dbname || process.env.DB_NAME || 'savitara_db',
@@ -81,7 +82,7 @@ async function getDbCredentials() {
     }
   }
   return {
-    host: process.env.DB_HOST || 'localhost',
+    host: DB_HOST || process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'admin',
     password: process.env.DB_PASSWORD || 'secret',
     database: process.env.DB_NAME || 'savitara_db',
@@ -104,6 +105,25 @@ async function checkDbHealth() {
     return { status: 'UP', details: rows[0] };
   } catch (error) {
     return { status: 'DOWN', error: error.message };
+  }
+}
+
+async function checkS3Health() {
+  if (!APP_S3_BUCKET) {
+    return { status: 'CONFIG_MISSING', message: 'APP_S3_BUCKET is not set' };
+  }
+  try {
+    const testKey = 'health-checks/ping-' + Date.now() + '.txt';
+    const putCmd = new PutObjectCommand({
+      Bucket: APP_S3_BUCKET,
+      Key: testKey,
+      Body: 'AWS S3 Read/Write verification test from EC2 Auto Scaling instance',
+      ContentType: 'text/plain',
+    });
+    await s3Client.send(putCmd);
+    return { status: 'SUCCESS', bucket: APP_S3_BUCKET, verifiedKey: testKey };
+  } catch (error) {
+    return { status: 'DOWN', bucket: APP_S3_BUCKET, error: error.message };
   }
 }
 
@@ -132,6 +152,11 @@ app.get('/api/db-status', async (req, res) => {
   res.json(result);
 });
 
+app.get('/api/s3-test', async (req, res) => {
+  const result = await checkS3Health();
+  res.json(result);
+});
+
 app.get('/', async (req, res) => {
   const dbHealth = await checkDbHealth();
   const html = '<!DOCTYPE html>' +
@@ -153,7 +178,7 @@ app.get('/', async (req, res) => {
         '<p><strong>AWS Region:</strong> ' + AWS_REGION + '</p>' +
         '<p><strong>Database Status:</strong> ' + dbHealth.status + '</p>' +
         '<p><strong>S3 Storage:</strong> ' + APP_S3_BUCKET + '</p>' +
-        '<p><a href="/health">View Health Check API (/health)</a></p>' +
+        '<p><a href="/health">Health Check API (/health)</a> &bull; <a href="/api/db-status">DB Status (/api/db-status)</a> &bull; <a href="/api/s3-test">S3 Test (/api/s3-test)</a></p>' +
       '</div>' +
     '</body>' +
     '</html>';
@@ -184,6 +209,7 @@ RestartSec=5
 Environment=PORT=3000
 Environment=AWS_REGION=${aws_region}
 Environment=DB_SECRET_ARN=${db_secret_arn}
+Environment=DB_HOST=${db_host}
 Environment=APP_S3_BUCKET=${app_s3_bucket}
 
 [Install]

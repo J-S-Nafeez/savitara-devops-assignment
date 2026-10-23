@@ -44,6 +44,7 @@ resource "aws_launch_template" "main" {
   user_data = base64encode(templatefile("${path.module}/user-data.sh.tftpl", {
     aws_region    = var.aws_region
     db_secret_arn = var.db_secret_arn
+    db_host       = var.db_host
     app_s3_bucket = var.app_s3_bucket
   }))
 

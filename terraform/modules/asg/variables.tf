@@ -65,6 +65,12 @@ variable "db_secret_arn" {
   type        = string
 }
 
+variable "db_host" {
+  description = "Host endpoint of the RDS MySQL instance"
+  type        = string
+  default     = ""
+}
+
 variable "app_s3_bucket" {
   description = "Name of application S3 storage bucket"
   type        = string

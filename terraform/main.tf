@@ -112,6 +112,7 @@ module "asg" {
   max_size               = var.asg_max_size
   desired_capacity       = var.asg_desired_capacity
   db_secret_arn          = module.secrets_manager.secret_arn
+  db_host                = module.rds.db_address
   app_s3_bucket          = module.s3.app_bucket_id
   tags                   = var.tags
 

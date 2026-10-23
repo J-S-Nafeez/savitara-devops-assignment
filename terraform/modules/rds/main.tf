@@ -47,7 +47,7 @@ resource "aws_db_instance" "main" {
   vpc_security_group_ids = [var.rds_security_group_id]
   parameter_group_name   = aws_db_parameter_group.main.name
 
-  backup_retention_period   = 7
+  backup_retention_period   = 0
   backup_window             = "03:00-04:00"
   maintenance_window        = "Sun:04:30-Sun:05:30"
   skip_final_snapshot       = var.skip_final_snapshot

@@ -92,6 +92,26 @@ flowchart TD
 
 ---
 
+## 📸 Live Deployment & Verification Evidence
+
+All cloud infrastructure and application services have been verified live in AWS Region `ap-south-1` (Mumbai). Full screenshots and verification artifacts are documented in [`docs/screenshots/README.md`](docs/screenshots/README.md).
+
+### Verified Live Endpoints & Responses
+
+| Verification Target | Live AWS Endpoint | Status | Output Evidence |
+|---|---|:---:|---|
+| **ALB HTTPS Dashboard** | `https://savitara-prod-alb-1429244812.ap-south-1.elb.amazonaws.com` | `200 OK` | Web GUI renders: **Healthy & Running**, DB Status **UP** |
+| **HTTP -> HTTPS Redirect** | `http://savitara-prod-alb-1429244812.ap-south-1.elb.amazonaws.com` | `301 Moved` | Location: `https://...:443/` |
+| **Application Health** | `/health` | `200 OK` | `{"status":"UP","hostname":"ip-10-0-12-12...","uptime":246}` |
+| **RDS MySQL Query** | `/api/db-status` | `200 OK` | `{"status":"UP","details":{"solution":2,"db_version":"8.0.46..."}}` |
+| **S3 SDK Integration** | `/api/s3-test` | `200 OK` | `{"status":"SUCCESS","bucket":"savitara-prod-app-storage-dlq50jqw"}` |
+| **Target Group** | `savitara-prod-tg` | Healthy | 2 of 2 EC2 instances passing health probes |
+| **Auto Scaling** | `savitara-prod-asg-...` | Active | 2 instances distributed across `ap-south-1a` & `ap-south-1b` |
+| **RDS MySQL** | `savitara-prod-rds-mysql` | Available | Private subnets, KMS encrypted, 2 active connections |
+| **GitHub Actions** | `Terraform CI/CD Pipeline` | Passed | 100% Green runs for lint, test, plan, apply, smoke test |
+
+---
+
 ## 🔒 Security & Best Practices Highlights
 
 1. **Zero Hardcoded Credentials**:

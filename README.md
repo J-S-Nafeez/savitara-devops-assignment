@@ -94,7 +94,7 @@ flowchart TD
 
 ## 📸 Live Deployment & Verification Evidence
 
-All cloud infrastructure and application services have been verified live in AWS Region `ap-south-1` (Mumbai). Full screenshots and verification artifacts are documented in [`docs/screenshots/README.md`](docs/screenshots/README.md).
+All cloud infrastructure and application services have been deployed, configured, and verified live in AWS Region `ap-south-1` (Mumbai).
 
 ### Verified Live Endpoints & Responses
 
@@ -109,6 +109,44 @@ All cloud infrastructure and application services have been verified live in AWS
 | **Auto Scaling** | `savitara-prod-asg-...` | Active | 2 instances distributed across `ap-south-1a` & `ap-south-1b` |
 | **RDS MySQL** | `savitara-prod-rds-mysql` | Available | Private subnets, KMS encrypted, 2 active connections |
 | **GitHub Actions** | `Terraform CI/CD Pipeline` | Passed | 100% Green runs for lint, test, plan, apply, smoke test |
+
+---
+
+### 🖼️ Live Verification Screenshots (Proof of Implementation)
+
+#### 1. Live Application GUI & Endpoints
+| Live Web App Dashboard (`/`) | Live MySQL Query Endpoint (`/api/db-status`) |
+|---|---|
+| ![Live Web App Dashboard](docs/screenshots/01-live-app-dashboard.png) | ![Live MySQL Status](docs/screenshots/02-api-db-status.png) |
+
+#### 2. Application Load Balancer & Target Group
+| ALB Active Status & Details | ALB HTTP 80 -> HTTPS 443 (301 Redirect) |
+|---|---|
+| ![ALB Active Details](docs/screenshots/03-alb-details-active.png) | ![ALB Listeners & Rules](docs/screenshots/04-alb-listeners-and-rules.png) |
+
+| Target Group (2 / 2 Healthy EC2 Instances on Port 3000) |
+|---|
+| ![ALB Target Group 2 Healthy](docs/screenshots/05-alb-target-group-healthy.png) |
+
+#### 3. EC2 Auto Scaling Group (Multi-AZ Private Subnets)
+| Auto Scaling Group Capacity (2 - 5 Instances) | ASG Multi-AZ Subnets (`ap-south-1a`, `ap-south-1b`) |
+|---|---|
+| ![ASG Group Details](docs/screenshots/06-asg-group-status.png) | ![ASG Subnets](docs/screenshots/07-asg-subnets.png) |
+
+#### 4. Amazon RDS MySQL 8.0 (Encrypted & Private)
+| RDS MySQL Instance Available (`db.t3.micro`, KMS Encrypted) | RDS Private Security Group & Endpoint Connectivity |
+|---|---|
+| ![RDS MySQL Available](docs/screenshots/08-rds-mysql-available.png) | ![RDS Security & Connectivity](docs/screenshots/09-rds-connectivity-security.png) |
+
+#### 5. Amazon S3 Storage & Verified Health Check Files
+| Provisioned S3 Buckets (App Storage & ALB Access Logs) | Live Health Check Ping Files Written by EC2 IAM Role |
+|---|---|
+| ![S3 Buckets List](docs/screenshots/10-s3-buckets-list.png) | ![S3 Health Check Objects](docs/screenshots/11-s3-health-checks-objects.png) |
+
+#### 6. GitHub Actions CI/CD Pipeline (100% Passing)
+| GitHub Actions Workflows (Automated Terraform CI/CD & Teardown) |
+|---|
+| ![GitHub Actions Workflows](docs/screenshots/12-github-actions-all-green.png) |
 
 ---
 

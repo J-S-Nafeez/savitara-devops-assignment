@@ -98,7 +98,7 @@ async function getDbPool() {
 async function checkDbHealth() {
   try {
     const pool = await getDbPool();
-    const [rows] = await pool.query('SELECT 1 + 1 AS solution, NOW() as current_time, VERSION() as db_version');
+    const [rows] = await pool.query('SELECT 1 + 1 AS solution, NOW() as server_time, VERSION() as db_version');
     return { status: 'UP', details: rows[0] };
   } catch (error) {
     return { status: 'DOWN', error: error.message };
